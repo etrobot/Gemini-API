@@ -1,0 +1,64 @@
+services:
+  gemini-webapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gemini-webapi
+    environment:
+      # Set your Gemini credentials here or in a .env file
+      - SECURE_1PSID=${SECURE_1PSID:-}
+      - SECURE_1PSIDTS=${SECURE_1PSIDTS:-}
+    volumes:
+      # Mount source code for development
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./assets:/app/assets
+    command: /bin/bash -c "tail -f /dev/null"
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+    networks:
+      - traefik
+    labels:
+      # Enable Traefik for this container
+      - "traefik.enable=true"
+      
+      # HTTPS router with Let's Encrypt
+      - "traefik.http.routers.gemini-webapi.rule=Host(`${DOMAIN:-gemini.example.com}`)"
+      - "traefik.http.routers.gemini-webapi.entrypoints=websecure"
+      - "traefik.http.routers.gemini-webapi.tls=true"
+      - "traefik.http.routers.gemini-webapi.tls.certresolver=letsencrypt"
+      
+      # Service configuration
+      - "traefik.http.services.gemini-webapi.loadbalancer.server.port=8000"
+      
+      # HTTP to HTTPS redirect
+      - "traefik.http.routers.gemini-webapi-http.rule=Host(`${DOMAIN:-gemini.example.com}`)"
+      - "traefik.http.routers.gemini-webapi-http.entrypoints=web"
+      - "traefik.http.routers.gemini-webapi-http.middlewares=redirect-to-https"
+      
+      # Middleware for HTTPS redirect
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+  # Service for running tests
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gemini-webapi-test
+    environment:
+      - SECURE_1PSID=${SECURE_1PSID:-}
+      - SECURE_1PSIDTS=${SECURE_1PSIDTS:-}
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./assets:/app/assets
+    command: python -m pytest tests/ -v
+    profiles:
+      - test
+
+networks:
+  traefik:
+    external: true
+    name: traefik

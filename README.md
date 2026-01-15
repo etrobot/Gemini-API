@@ -69,11 +69,37 @@ A reverse-engineered asynchronous python wrapper for [Google Gemini](https://gem
 >
 > This package requires Python 3.10 or higher.
 
+### Using pip
+
 Install/update the package with pip.
 
 ```sh
 pip install -U gemini_webapi
 ```
+
+### Using Docker
+
+For containerized development and testing, Docker support is available with Traefik integration.
+
+```sh
+# Build the Docker image
+docker-compose build
+
+# Start the container
+docker-compose up -d
+
+# Run tests
+docker-compose --profile test up test
+
+# Or use the Makefile shortcuts
+make build
+make up
+make test
+```
+
+**Traefik Support**: The docker-compose.yml includes Traefik labels for automatic HTTPS with Let's Encrypt. Set `DOMAIN` in `.env` to enable.
+
+See [DOCKER.md](DOCKER.md) for detailed Docker usage and Traefik integration instructions.
 
 Optionally, package offers a way to automatically import cookies from your local browser. To enable this feature, install `browser-cookie3` as well. Supported platforms and browsers can be found [here](https://github.com/borisbabic/browser_cookie3?tab=readme-ov-file#contribute).
 

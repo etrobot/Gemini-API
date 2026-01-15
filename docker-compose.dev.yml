@@ -1,0 +1,28 @@
+# Development-focused docker-compose configuration
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+services:
+  gemini-webapi-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gemini-webapi-dev
+    environment:
+      - SECURE_1PSID=${SECURE_1PSID:-}
+      - SECURE_1PSIDTS=${SECURE_1PSIDTS:-}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount source code for live development
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./assets:/app/assets
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    networks:
+      - gemini-network
+
+networks:
+  gemini-network:
+    driver: bridge
