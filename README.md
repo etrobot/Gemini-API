@@ -43,6 +43,8 @@ A reverse-engineered asynchronous python wrapper for [Google Gemini](https://gem
 - [Installation](#installation)
 - [Authentication](#authentication)
 - [Usage](#usage)
+  - [REST API Server](#rest-api-server)
+  - [Python Library](#python-library)
   - [Initialization](#initialization)
   - [Generate contents](#generate-contents)
   - [Generate contents with files](#generate-contents-with-files)

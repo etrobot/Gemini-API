@@ -8,32 +8,38 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    SETUPTOOLS_SCM_PRETEND_VERSION=1.0.0 \
+    GEMINI_COOKIE_PATH=/tmp/gemini_cookies
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy project files
-COPY pyproject.toml uv.lock README.md LICENSE ./
-COPY src/ ./src/
-COPY tests/ ./tests/
-COPY assets/ ./assets/
-COPY .git/ ./.git/
 
 # Install uv for faster dependency management
 RUN pip install uv
 
-# Install project dependencies (setuptools_scm needs git history)
+# Copy all project files first
+COPY . .
+
+# Install project dependencies
 RUN uv pip install --system -e .
 
-# Install test dependencies
-RUN uv pip install --system pytest pytest-asyncio
-
-# Create a non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create a non-root user and ensure proper permissions
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app && \
+    mkdir -p /tmp/gemini_cookies && \
+    chown -R appuser:appuser /tmp/gemini_cookies && \
+    chmod 755 /tmp/gemini_cookies
 USER appuser
 
-# Default command - run tests
-CMD ["python", "-m", "pytest", "tests/", "-v"]
+# Expose port
+EXPOSE 8000
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Default command - run FastAPI server
+CMD ["python", "-m", "uvicorn", "gemini_webapi.server:app", "--host", "0.0.0.0", "--port", "8000"]

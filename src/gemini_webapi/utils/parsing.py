@@ -78,3 +78,32 @@ def extract_json_from_response(text: str) -> list:
 
     # If no JSON is found, raise ValueError
     raise ValueError("Could not find a valid JSON object or array in the response.")
+
+
+def is_loading_response(response_data: list) -> bool:
+    """
+    Check if the response is a loading/intermediate state response.
+    
+    Parameters
+    ----------
+    response_data: `list`
+        The parsed JSON response data.
+        
+    Returns
+    -------
+    `bool`
+        True if this appears to be a loading response, False otherwise.
+    """
+    try:
+        # Check for loading indicators in the response
+        for item in response_data:
+            if isinstance(item, list) and len(item) >= 2:
+                # Look for loading messages in nested structures
+                content = str(item).lower()
+                if any(indicator in content for indicator in [
+                    'loading', 'nano banana pro', 'data_analysis_tool'
+                ]):
+                    return True
+        return False
+    except (TypeError, IndexError):
+        return False

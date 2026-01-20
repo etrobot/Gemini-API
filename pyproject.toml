@@ -24,6 +24,10 @@ dependencies = [
     "loguru~=0.7.3",
     "orjson~=3.11.1",
     "pydantic~=2.12.2",
+    "fastapi~=0.115.0",
+    "uvicorn[standard]~=0.32.0",
+    "aiofiles~=24.1.0",
+    "python-multipart~=0.0.12",
 ]
 dynamic = ["version"]
 

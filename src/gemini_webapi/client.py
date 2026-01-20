@@ -31,6 +31,7 @@ from .utils import (
     extract_json_from_response,
     get_access_token,
     get_nested_value,
+    is_loading_response,
     logger,
     parse_file_name,
     rotate_1psidts,
@@ -242,6 +243,7 @@ class GeminiClient(GemMixin):
         model: Model | str | dict = Model.UNSPECIFIED,
         gem: Gem | str | None = None,
         chat: Optional["ChatSession"] = None,
+        _loading_retry_count: int = 0,
         **kwargs,
     ) -> ModelOutput:
         """
@@ -376,6 +378,18 @@ class GeminiClient(GemMixin):
                     raise Exception
             except Exception:
                 await self.close()
+
+                # Check if this is a loading response before treating it as an error
+                if response_json and is_loading_response(response_json):
+                    if _loading_retry_count < 5:  # Limit retries to prevent infinite recursion
+                        logger.debug(f"Received loading response, retrying... (attempt {_loading_retry_count + 1}/5)")
+                        # Wait a bit and retry the request
+                        await asyncio.sleep(2 + _loading_retry_count)  # Exponential backoff
+                        return await self.generate_content(
+                            prompt, files, model, gem, chat, _loading_retry_count + 1, **kwargs
+                        )
+                    else:
+                        logger.warning("Maximum loading retries exceeded, treating as error")
 
                 try:
                     error_code = get_nested_value(response_json, [0, 5, 2, 0, 1, 0], -1)

@@ -1,5 +1,5 @@
 # Git
-# .git - keep it for setuptools_scm versioning
+.git/
 .gitignore
 
 # Python
@@ -56,3 +56,12 @@ docker-compose.yml
 
 # GitHub
 .github/
+
+# Development files
+run_server.py
+test_api.py
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
